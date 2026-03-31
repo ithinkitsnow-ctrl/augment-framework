@@ -1,0 +1,2854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script>
+(function() {
+  var pwd = sessionStorage.getItem('aug_auth');
+  if (pwd !== 'augmentcos') {
+    document.documentElement.style.visibility = 'hidden';
+    window.addEventListener('DOMContentLoaded', function() {
+      var gate = document.createElement('div');
+      gate.id = 'aug-gate';
+      gate.innerHTML = `
+        <style>
+          #aug-gate {
+            position:fixed;inset:0;background:#0A0B0A;
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            font-family:'DM Sans',sans-serif;z-index:99999;
+          }
+          #aug-gate svg { margin-bottom:20px; }
+          #aug-gate h1 {
+            font-size:15px;font-weight:600;color:#F4F5F2;
+            letter-spacing:-0.01em;margin-bottom:4px;
+          }
+          #aug-gate p {
+            font-size:12px;color:#5A5E58;margin-bottom:28px;
+            font-family:'DM Mono',monospace;letter-spacing:0.04em;
+          }
+          #aug-gate input {
+            background:#161816;border:1px solid #252825;
+            border-radius:8px;padding:10px 14px;
+            font-size:13px;color:#F4F5F2;font-family:'DM Sans',sans-serif;
+            width:220px;outline:none;text-align:center;letter-spacing:0.06em;
+            transition:border-color 0.2s;
+          }
+          #aug-gate input:focus { border-color:#2E312E; }
+          #aug-gate input.err { border-color:#C0493A;animation:shake 0.3s; }
+          @keyframes shake {
+            0%,100%{transform:translateX(0)}
+            25%{transform:translateX(-6px)}
+            75%{transform:translateX(6px)}
+          }
+          #aug-gate button {
+            display:block;margin:10px auto 0;
+            background:#4CAF72;border:none;border-radius:8px;
+            padding:9px 28px;font-size:12px;font-weight:600;
+            color:#0A0B0A;cursor:pointer;font-family:'DM Sans',sans-serif;
+            letter-spacing:0.02em;transition:opacity 0.15s;
+          }
+          #aug-gate button:hover { opacity:0.85; }
+        </style>
+        <svg width="28" height="28" viewBox="0 0 22 22" fill="none">
+          <path d="M11 2L19 7V15L11 20L3 15V7L11 2Z" stroke="#4CAF72" stroke-width="1.5" fill="none"/>
+          <path d="M11 6L16 9V15L11 18L6 15V9L11 6Z" fill="#4CAF72" opacity="0.3"/>
+        </svg>
+        <h1>augment</h1>
+        <p>CONFIDENTIAL · ENTER ACCESS CODE</p>
+        <input id="aug-pw" type="password" placeholder="· · · · · · · · · ·" autofocus/>
+        <button onclick="augCheck()">Unlock</button>
+      `;
+      document.body.appendChild(gate);
+      document.documentElement.style.visibility = 'visible';
+      document.getElementById('aug-pw').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') augCheck();
+      });
+    });
+  }
+  window.augCheck = function() {
+    var val = document.getElementById('aug-pw').value;
+    if (val === 'augmentcos') {
+      sessionStorage.setItem('aug_auth', 'augmentcos');
+      document.getElementById('aug-gate').remove();
+    } else {
+      var inp = document.getElementById('aug-pw');
+      inp.classList.add('err');
+      inp.value = '';
+      setTimeout(function(){ inp.classList.remove('err'); }, 400);
+    }
+  };
+})();
+</script>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Augment — Augie Adoption Framework</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* ─── AUGMENT BRAND TOKENS ─── */
+  :root {
+    --aug-black:    #0A0B0A;
+    --aug-dark:     #111311;
+    --aug-card:     #161816;
+    --aug-border:   #252825;
+    --aug-border2:  #2E312E;
+    --aug-green:    #4CAF72;
+    --aug-green2:   #3A9159;
+    --aug-green-lo: #1A3325;
+    --aug-green-dim:#243D2E;
+    --aug-white:    #F4F5F2;
+    --aug-gray:     #8A9088;
+    --aug-gray2:    #5A5E58;
+    --aug-amber:    #D4A843;
+    --aug-amber-lo: #2E2615;
+    --aug-red:      #C0493A;
+    --aug-red-lo:   #2A1512;
+    --font-display: 'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--aug-black);
+    color: var(--aug-white);
+    font-family: var(--font-display);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* ─── NAVIGATION ─── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--aug-border);
+    background: var(--aug-dark);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--aug-white);
+    letter-spacing: -0.02em;
+  }
+
+  .nav-logo svg { width: 22px; height: 22px; }
+
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .nav-tab {
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--aug-gray);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    background: none;
+    font-family: var(--font-display);
+  }
+
+  .nav-tab:hover { color: var(--aug-white); }
+  .nav-tab.active {
+    background: var(--aug-border2);
+    color: var(--aug-white);
+  }
+
+  .nav-badge {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: var(--aug-green-lo);
+    color: var(--aug-green);
+    border: 1px solid var(--aug-green-dim);
+  }
+
+  /* ─── SLIDE CONTAINER ─── */
+  .slide {
+    display: none;
+    min-height: calc(100vh - 57px);
+    padding: 48px 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .slide.active { display: block; }
+
+  /* ─── SLIDE HEADER ─── */
+  .slide-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--aug-green);
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+  }
+
+  .slide-title {
+    font-size: 32px;
+    font-weight: 300;
+    letter-spacing: -0.03em;
+    color: var(--aug-white);
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+
+  .slide-title strong { font-weight: 600; }
+
+  .slide-subtitle {
+    font-size: 14px;
+    color: var(--aug-gray);
+    margin-bottom: 48px;
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  /* ─── SLIDE 1: MATURITY ARC ─── */
+  .maturity-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    position: relative;
+    margin-bottom: 24px;
+  }
+
+  /* Rising arc connector */
+  .arc-connector {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--aug-border2);
+    z-index: 0;
+  }
+
+  .stage-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Staggered heights to show the arc */
+  .stage-col:nth-child(1) { padding-top: 200px; }
+  .stage-col:nth-child(2) { padding-top: 150px; }
+  .stage-col:nth-child(3) { padding-top: 100px; }
+  .stage-col:nth-child(4) { padding-top: 50px; }
+  .stage-col:nth-child(5) { padding-top: 0px; }
+
+  .stage-card {
+    width: 100%;
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 20px 16px;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .stage-card:hover { border-color: var(--aug-border2); }
+  .stage-card.plateau { border-color: var(--aug-amber); }
+  .stage-card.target { border-color: var(--aug-green); }
+  .stage-card.target::after {
+    content: 'Fortune 500 target';
+    position: absolute;
+    top: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: var(--aug-green);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    background: var(--aug-green-lo);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--aug-green-dim);
+  }
+
+  .stage-num {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .stage-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--aug-white);
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .stage-desc {
+    font-size: 11px;
+    color: var(--aug-gray);
+    line-height: 1.5;
+    margin-bottom: 12px;
+  }
+
+  .stage-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .stage-bullets li {
+    font-size: 10px;
+    color: var(--aug-gray2);
+    line-height: 1.4;
+    padding-left: 10px;
+    position: relative;
+  }
+
+  .stage-bullets li::before {
+    content: '–';
+    position: absolute;
+    left: 0;
+    color: var(--aug-gray2);
+  }
+
+  .stage-pill {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .pill-gray  { background: #1E201E; color: var(--aug-gray); border: 1px solid var(--aug-border2); }
+  .pill-blue  { background: #131A25; color: #6B9FD4; border: 1px solid #1D2F42; }
+  .pill-amber { background: var(--aug-amber-lo); color: var(--aug-amber); border: 1px solid #3A3018; }
+  .pill-teal  { background: #0F2020; color: #5EC4A8; border: 1px solid #163228; }
+  .pill-green { background: var(--aug-green-lo); color: var(--aug-green); border: 1px solid var(--aug-green-dim); }
+
+  /* Plateau callout */
+  .plateau-callout {
+    background: var(--aug-amber-lo);
+    border: 1px solid #3A3018;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .plateau-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--aug-amber);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .plateau-text {
+    font-size: 12px;
+    color: #C8A050;
+    line-height: 1.6;
+  }
+
+  .plateau-text strong { color: var(--aug-amber); font-weight: 600; }
+
+  /* Arc SVG overlay */
+  .arc-wrap {
+    position: relative;
+    margin-bottom: 16px;
+  }
+
+  .arc-svg {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    pointer-events: none;
+  }
+
+
+  /* ─── CLIENT REALITY ROW ─── */
+  .reality-row { margin: 0 0 10px 0; }
+
+  .reality-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .reality-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    white-space: nowrap;
+  }
+
+  .reality-rule { flex: 1; height: 1px; background: var(--aug-border); }
+
+  .reality-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+  }
+
+  .reality-cell {
+    padding: 14px 10px;
+    border-left: 1px solid var(--aug-border);
+  }
+
+  .reality-cell:first-child { border-left: none; }
+
+  .reality-pct {
+    font-size: 24px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .reality-pct span {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    margin-left: 1px;
+  }
+
+  .reality-tagline {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--aug-white);
+    line-height: 1.3;
+    margin-bottom: 5px;
+    letter-spacing: -0.01em;
+  }
+
+  .reality-body { font-size: 11px; color: var(--aug-gray); line-height: 1.5; }
+
+  .reality-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .reality-cell.r0 .reality-pct { color: var(--aug-gray2); }
+  .reality-cell.r0 .reality-metric { background: #1A1C1A; color: var(--aug-gray2); border: 1px solid var(--aug-border2); }
+  .reality-cell.r1 .reality-pct { color: #6B9FD4; }
+  .reality-cell.r1 .reality-metric { background: #131A25; color: #6B9FD4; border: 1px solid #1D2F42; }
+  .reality-cell.r2 .reality-pct { color: var(--aug-amber); }
+  .reality-cell.r2 .reality-metric { background: var(--aug-amber-lo); color: var(--aug-amber); border: 1px solid #3A3018; }
+  .reality-cell.r3 .reality-pct { color: #5EC4A8; }
+  .reality-cell.r3 .reality-metric { background: #0F2020; color: #5EC4A8; border: 1px solid #163228; }
+  .reality-cell.r4 .reality-pct { color: var(--aug-green); }
+  .reality-cell.r4 .reality-metric { background: var(--aug-green-lo); color: var(--aug-green); border: 1px solid var(--aug-green-dim); }
+
+  /* ─── SLIDE 2: JOURNEY SLIDE ─── */
+  .journey-phases {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+    margin-bottom: 32px;
+  }
+
+  /* Arrow connectors between phases */
+  .journey-phases::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    left: 12.5%;
+    right: 12.5%;
+    height: 1px;
+    background: var(--aug-border2);
+    z-index: 0;
+  }
+
+  .phase-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 8px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Arrow between phases */
+  .phase-col:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -10px;
+    top: 68px;
+    font-size: 14px;
+    color: var(--aug-border2);
+    z-index: 2;
+  }
+
+  /* Silhouette person */
+  .silhouette-wrap {
+    width: 60px;
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .silhouette {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .sil-head {
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .sil-body {
+    border-radius: 6px 6px 0 0;
+    flex-shrink: 0;
+  }
+
+  /* Second smaller silhouette for CS phase */
+  .silhouette-wrap.duo .silhouette:first-child { margin-right: -8px; }
+  .silhouette-wrap.trio .silhouette:nth-child(2) { margin: 0 -6px; z-index: 1; }
+
+  .phase-card {
+    width: 100%;
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 18px 14px;
+    flex: 1;
+  }
+
+  .phase-header {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    margin-bottom: 6px;
+  }
+
+  .phase-role {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--aug-white);
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .phase-stage {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    margin-bottom: 12px;
+  }
+
+  .phase-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .phase-items li {
+    font-size: 11px;
+    color: var(--aug-gray);
+    padding-left: 12px;
+    position: relative;
+    line-height: 1.4;
+  }
+
+  .phase-items li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.5;
+  }
+
+  .phase-milestone {
+    font-size: 10px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    padding: 4px 10px;
+    border-radius: 5px;
+    display: inline-block;
+    letter-spacing: 0.03em;
+  }
+
+  /* Timeline bar */
+  .timeline-bar {
+    position: relative;
+    height: 48px;
+    margin-bottom: 32px;
+  }
+
+  .timeline-track {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--aug-border);
+    transform: translateY(-50%);
+  }
+
+  .timeline-fill {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.6s ease;
+  }
+
+  .timeline-dots {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 12.5%;
+  }
+
+  .timeline-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--aug-border2);
+    background: var(--aug-dark);
+    position: relative;
+  }
+
+  .timeline-dot-label {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--aug-gray2);
+    white-space: nowrap;
+    font-family: var(--font-mono);
+  }
+
+  /* ─── BOTTOM CALLOUT ─── */
+  .bottom-callout {
+    background: var(--aug-green-lo);
+    border: 1px solid var(--aug-green-dim);
+    border-radius: 10px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .callout-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--aug-green);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .callout-text {
+    font-size: 12px;
+    color: #6EC48A;
+    line-height: 1.7;
+  }
+
+  .callout-text strong { color: var(--aug-green); font-weight: 600; }
+
+  /* ─── PHASE COLORS ─── */
+  .col-ae .phase-header { color: #6B9FD4; }
+  .col-ae .phase-card { border-color: #1D2F42; }
+  .col-ae .phase-milestone { background: #131A25; color: #6B9FD4; border: 1px solid #1D2F42; }
+  .col-ae .sil-head, .col-ae .sil-body { background: #6B9FD4; }
+
+  .col-fde .phase-header { color: var(--aug-amber); }
+  .col-fde .phase-card { border-color: #3A3018; }
+  .col-fde .phase-milestone { background: var(--aug-amber-lo); color: var(--aug-amber); border: 1px solid #3A3018; }
+  .col-fde .sil-head, .col-fde .sil-body { background: var(--aug-amber); }
+
+  .col-cs .phase-header { color: #5EC4A8; }
+  .col-cs .phase-card { border-color: #163228; }
+  .col-cs .phase-milestone { background: #0F2020; color: #5EC4A8; border: 1px solid #163228; }
+  .col-cs .sil-head, .col-cs .sil-body { background: #5EC4A8; }
+  .col-cs .sil-head.small, .col-cs .sil-body.small { background: #2F7060; }
+
+  .col-partner .phase-header { color: var(--aug-green); }
+  .col-partner .phase-card { border-color: var(--aug-green-dim); }
+  .col-partner .phase-milestone { background: var(--aug-green-lo); color: var(--aug-green); border: 1px solid var(--aug-green-dim); }
+  .col-partner .sil-head, .col-partner .sil-body { background: var(--aug-green); }
+  .col-partner .sil-head.small, .col-partner .sil-body.small { background: var(--aug-green2); }
+  .col-partner .sil-head.smaller, .col-partner .sil-body.smaller { background: #1A6B3A; }
+
+  /* ─── DIVIDER ─── */
+  .section-divider {
+    height: 1px;
+    background: var(--aug-border);
+    margin: 32px 0;
+  }
+
+  /* ─── HOVER STATES ─── */
+  .stage-card:hover .stage-label { color: var(--aug-green); }
+  .phase-card:hover { border-color: var(--aug-border2); }
+
+  /* ─── FOOTER ─── */
+  .slide-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 24px;
+    margin-top: 24px;
+    border-top: 1px solid var(--aug-border);
+  }
+
+  .footer-logo {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--aug-gray2);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .footer-logo svg { opacity: 0.4; }
+
+  .footer-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    letter-spacing: 0.06em;
+  }
+
+  /* ─── CLIENT TEAM ROW (Journey Slide) ─── */
+  .client-row { margin: 0 0 24px 0; }
+
+  .client-row-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .client-row-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    white-space: nowrap;
+  }
+
+  .client-row-rule { flex: 1; height: 1px; background: var(--aug-border); }
+
+  .client-row-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+
+  .client-cell {
+    padding: 14px 10px;
+    border-left: 1px solid var(--aug-border);
+  }
+
+  .client-cell:first-child { border-left: none; }
+
+  .client-personas {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .client-persona {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Client silhouettes — slightly different shape to distinguish from Augment team */
+  .csil {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    opacity: 0.9;
+  }
+
+  .csil-head {
+    border-radius: 50%;
+  }
+
+  .csil-body {
+    border-radius: 4px 4px 0 0;
+    margin-top: 2px;
+  }
+
+  /* EVP/VP — largest, most prominent */
+  .csil.exec .csil-head  { width: 16px; height: 16px; }
+  .csil.exec .csil-body  { width: 22px; height: 18px; }
+
+  /* Director — medium */
+  .csil.dir .csil-head  { width: 13px; height: 13px; }
+  .csil.dir .csil-body  { width: 18px; height: 15px; }
+
+  /* Ops — smaller */
+  .csil.ops .csil-head  { width: 11px; height: 11px; }
+  .csil.ops .csil-body  { width: 15px; height: 12px; }
+
+  /* Color — client team uses a lighter, more neutral palette to distinguish from Augment */
+  .csil.exec .csil-head,
+  .csil.exec .csil-body { background: #7A8FA6; }
+
+  .csil.dir .csil-head,
+  .csil.dir .csil-body  { background: #5A7A6A; }
+
+  .csil.ops .csil-head,
+  .csil.ops .csil-body  { background: #4A6460; }
+
+  .csil.active-exec .csil-head,
+  .csil.active-exec .csil-body { background: #8BA8C4; }
+
+  .csil.active-dir .csil-head,
+  .csil.active-dir .csil-body  { background: var(--aug-green2); }
+
+  .csil.active-ops .csil-head,
+  .csil.active-ops .csil-body  { background: var(--aug-green); }
+
+  .client-persona-info {}
+
+  .client-role-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--aug-white);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+
+  .client-role-title {
+    font-size: 10px;
+    color: var(--aug-gray2);
+    line-height: 1.3;
+    font-family: var(--font-mono);
+  }
+
+  .client-role-note {
+    font-size: 10px;
+    color: var(--aug-gray);
+    line-height: 1.4;
+    margin-top: 3px;
+  }
+
+  .engagement-tag {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-top: 3px;
+    letter-spacing: 0.03em;
+  }
+
+  .tag-exec   { background: #1A2530; color: #8BA8C4; border: 1px solid #1D3040; }
+  .tag-dir    { background: #0F1E18; color: #5A9A7A; border: 1px solid #163228; }
+  .tag-ops    { background: var(--aug-green-lo); color: var(--aug-green); border: 1px solid var(--aug-green-dim); }
+  .tag-back   { background: #1A1C1A; color: var(--aug-gray2); border: 1px solid var(--aug-border2); }
+
+
+  /* ══ SLIDE 3: INTERNAL SCORING ══════════════════════════════ */
+  .scoring-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .score-col {
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 14px 12px;
+  }
+
+  .score-col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .score-col-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+
+  .score-col-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+  }
+
+  .score-bar-mini {
+    height: 3px;
+    border-radius: 2px;
+    background: var(--aug-border);
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .moment-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--aug-border);
+    cursor: pointer;
+  }
+
+  .moment-item:last-child { border-bottom: none; }
+  .moment-item:hover { background: rgba(255,255,255,0.02); border-radius: 4px; }
+
+  .m-btn {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 1px solid;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 600;
+    transition: all 0.15s;
+    margin-top: 1px;
+    background: none;
+    font-family: var(--font-mono);
+  }
+
+  .m0 { border-color: var(--aug-border2); color: var(--aug-gray2); }
+  .m1 { border-color: #D4A843; color: #D4A843; background: #2E2615; }
+  .m2 { border-color: #4CAF72; color: #4CAF72; background: #1A3325; }
+
+  .moment-text {}
+
+  .moment-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--aug-white);
+    line-height: 1.3;
+    margin-bottom: 1px;
+  }
+
+  .moment-type {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+
+  .mtype-train { background: #0C1E18; color: #7AC8A8; border: 1px solid #163228; }
+  .mtype-impl  { background: #0F1E30; color: #7AAFD8; border: 1px solid #1A2F44; }
+  .mtype-hand  { background: #280A08; color: #E07060; border: 1px solid #4A1818; }
+
+  .moment-cos {
+    font-size: 9px;
+    color: #8AB8A8;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* Stage color accents */
+  .sc-prelaunch  .score-col-label { color: #D4A843; }
+  .sc-prelaunch  .score-bar-fill  { background: #D4A843; }
+  .sc-prelaunch  { border-color: #3A3018; }
+
+  .sc-golive  .score-col-label { color: #6B9FD4; }
+  .sc-golive  .score-bar-fill  { background: #6B9FD4; }
+  .sc-golive  { border-color: #1D2F42; }
+
+  .sc-adopt .score-col-label { color: #5EC4A8; }
+  .sc-adopt .score-bar-fill  { background: #5EC4A8; }
+  .sc-adopt { border-color: #163228; }
+
+  .sc-expand .score-col-label { color: #4CAF72; }
+  .sc-expand .score-bar-fill  { background: #4CAF72; }
+  .sc-expand { border-color: #1A3325; }
+
+  /* Stats bar */
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .stat-box {
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 3px;
+  }
+
+  .stat-sub {
+    font-size: 11px;
+    color: var(--aug-gray2);
+    line-height: 1.4;
+  }
+
+  .renewal-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    padding: 3px 10px;
+    border-radius: 5px;
+    margin-top: 6px;
+  }
+
+  .renew-strong  { background: #0F2518; color: #4CAF72; border: 1px solid #1A3A24; }
+  .renew-caution { background: #2E2615; color: #D4A843; border: 1px solid #3A3018; }
+  .renew-risk    { background: #280A08; color: #E07060; border: 1px solid #4A1818; }
+
+  .narrative-box {
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 12px;
+    color: var(--aug-gray);
+    line-height: 1.7;
+  }
+
+  .narrative-box strong { color: var(--aug-white); font-weight: 500; }
+
+  /* ─── TOOLTIPS ─── */
+  .has-tip {
+    position: relative;
+    cursor: help;
+    border-bottom: 1px dashed var(--aug-border2);
+    display: inline;
+  }
+
+  .has-tip .tip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    width: 260px;
+    background: #1E201E;
+    border: 1px solid var(--aug-border2);
+    border-radius: 7px;
+    padding: 9px 11px;
+    font-size: 10px;
+    color: #A8B4A8;
+    line-height: 1.55;
+    font-style: normal;
+    z-index: 999;
+    pointer-events: none;
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .has-tip .tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 12px;
+    border: 5px solid transparent;
+    border-top-color: var(--aug-border2);
+  }
+
+  .has-tip:hover .tip { display: block; }
+
+  .tip-label {
+    font-size: 9px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    color: #4CAF72;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  /* ─── PURPLE REMOVAL — replace with teal/green palette ─── */
+
+  /* ══ SLIDE 4: QBR SCORECARD ══════════════════════════════════ */
+  .qbr-top {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .qbr-stage-map {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 20px 24px;
+  }
+
+  .qbr-stage-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    position: relative;
+  }
+
+  .qbr-stage-node:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: -50%;
+    width: 100%;
+    height: 1px;
+    background: var(--aug-border2);
+    z-index: 0;
+  }
+
+  .qbr-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    position: relative;
+    z-index: 1;
+    margin-bottom: 6px;
+    transition: all 0.3s;
+  }
+
+  .qbr-dot.done     { background: #1A3325; border-color: #4CAF72; color: #4CAF72; }
+  .qbr-dot.current  { background: #2E3A20; border-color: #4CAF72; color: #4CAF72; box-shadow: 0 0 0 4px #1A3325; }
+  .qbr-dot.upcoming { background: var(--aug-dark); border-color: var(--aug-border2); color: var(--aug-gray2); }
+
+  .qbr-stage-name {
+    font-size: 10px;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .qbr-stage-name.done    { color: #4CAF72; }
+  .qbr-stage-name.current { color: var(--aug-white); }
+  .qbr-stage-name.upcoming{ color: var(--aug-gray2); }
+
+  .qbr-metrics-box {
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .qbr-metric {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .qbr-metric-label {
+    font-size: 11px;
+    color: var(--aug-gray);
+  }
+
+  .qbr-metric-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--aug-white);
+    letter-spacing: -0.01em;
+    font-family: var(--font-mono);
+  }
+
+  .qbr-metric-bar {
+    flex: 1;
+    height: 4px;
+    background: var(--aug-border);
+    border-radius: 2px;
+    overflow: hidden;
+    max-width: 80px;
+  }
+
+  .qbr-metric-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--aug-green);
+  }
+
+  .qbr-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .qbr-section {
+    background: var(--aug-card);
+    border: 1px solid var(--aug-border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+
+  .qbr-section-head {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    margin-bottom: 14px;
+  }
+
+  .qbr-win {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--aug-border);
+  }
+
+  .qbr-win:last-child { border-bottom: none; }
+
+  .qbr-win-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--aug-green);
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .qbr-win-text {
+    font-size: 12px;
+    color: var(--aug-white);
+    line-height: 1.4;
+  }
+
+  .qbr-win-sub {
+    font-size: 10px;
+    color: var(--aug-gray);
+    font-family: var(--font-mono);
+    margin-top: 1px;
+  }
+
+  .qbr-next-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--aug-border);
+  }
+
+  .qbr-next-item:last-child { border-bottom: none; }
+
+  .qbr-next-num {
+    font-size: 10px;
+    font-weight: 600;
+    font-family: var(--font-mono);
+    color: var(--aug-amber);
+    width: 14px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .qbr-next-text {
+    font-size: 12px;
+    color: var(--aug-white);
+    line-height: 1.4;
+  }
+
+  .qbr-next-who {
+    font-size: 10px;
+    color: var(--aug-gray2);
+    font-family: var(--font-mono);
+    margin-top: 1px;
+  }
+
+  .qbr-focus-box {
+    background: var(--aug-green-lo);
+    border: 1px solid var(--aug-green-dim);
+    border-radius: 10px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
+  }
+
+  .qbr-focus-head {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+    color: var(--aug-green);
+    margin-bottom: 8px;
+  }
+
+  .qbr-focus-text {
+    font-size: 13px;
+    color: #8ED4A4;
+    line-height: 1.7;
+  }
+
+  .qbr-focus-text strong { color: var(--aug-green); font-weight: 600; }
+
+  .qbr-who-select {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .qbr-stage-btn {
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    border: 1px solid var(--aug-border2);
+    background: var(--aug-card);
+    color: var(--aug-gray);
+    transition: all 0.15s;
+  }
+
+  .qbr-stage-btn:hover { color: var(--aug-white); border-color: var(--aug-border2); }
+  .qbr-stage-btn.active { background: var(--aug-green-lo); color: var(--aug-green); border-color: var(--aug-green-dim); }
+
+  .account-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--aug-gray2);
+    letter-spacing: 0.04em;
+  }
+
+  .account-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--aug-white);
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .account-stage-badge {
+    font-size: 9px;
+    font-weight: 500;
+    font-family: var(--font-mono);
+    padding: 2px 7px;
+    border-radius: 4px;
+    background: var(--aug-green-lo);
+    color: var(--aug-green);
+    border: 1px solid var(--aug-green-dim);
+  }
+
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">
+    <svg viewBox="0 0 22 22" fill="none">
+      <path d="M11 2L19 7V15L11 20L3 15V7L11 2Z" stroke="#4CAF72" stroke-width="1.5" fill="none"/>
+      <path d="M11 6L16 9V15L11 18L6 15V9L11 6Z" fill="#4CAF72" opacity="0.3"/>
+    </svg>
+    augment
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSlide(0)">Maturity arc</button>
+    <button class="nav-tab" onclick="showSlide(1)">Customer journey</button>
+    <button class="nav-tab" onclick="showSlide(2)">Internal scoring</button>
+    <button class="nav-tab" onclick="showSlide(3)">QBR scorecard</button>
+    <button class="nav-tab" onclick="showSlide(4)">Engagement loop</button>
+  </div>
+  <span class="nav-badge">Augie adoption framework</span>
+</nav>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 1 — MATURITY ARC
+═══════════════════════════════════════ -->
+<div class="slide active" id="slide-0">
+
+  <div class="slide-eyebrow">Augie adoption maturity</div>
+  <h1 class="slide-title">Where is your organisation <strong>today?</strong></h1>
+  <p class="slide-subtitle">Every customer starts at Stage 0. The goal is Stage 4. Most stall at Stage 2. This framework gives your team and ours a shared language for the journey — and a shared commitment to completing it.</p>
+
+  <div class="plateau-callout">
+    <div class="plateau-dot"></div>
+    <p class="plateau-text">
+      <strong>The problem Augment is solving internally:</strong> No account has yet reached 50% workflow penetration. Customers reach Stage 2 — stable implementation — and plateau. The gap between Stage 2 and Stage 3 is not a product problem. It is a change management and accountability problem. This framework closes it.
+    </p>
+  </div>
+
+  <div class="maturity-grid">
+
+    <div class="stage-col">
+      <div class="stage-card">
+        <div class="stage-num">STAGE 00</div>
+        <div class="stage-label">Unaware</div>
+        <div class="stage-desc">Fully manual operations. No AI tools in use. Tribal knowledge drives every decision.</div>
+        <ul class="stage-bullets">
+          <li>8–12 loads per rep per day</li>
+          <li>Track-and-trace calls: 60% of team time</li>
+          <li>Manual invoice entry and follow-up</li>
+          <li>No measurement of operational efficiency</li>
+        </ul>
+        <span class="stage-pill pill-gray">All manual</span>
+      </div>
+    </div>
+
+    <div class="stage-col">
+      <div class="stage-card">
+        <div class="stage-num">STAGE 01</div>
+        <div class="stage-label">Exploring</div>
+        <div class="stage-desc">Augie PoC signed. FDE embedded. First workflow being scoped and configured.</div>
+        <ul class="stage-bullets">
+          <li>PoC success criteria defined</li>
+          <li>TMS integration underway</li>
+          <li>SOP documentation in progress</li>
+          <li>Team training scheduled</li>
+        </ul>
+        <span class="stage-pill pill-blue">PoC active</span>
+      </div>
+    </div>
+
+    <div class="stage-col">
+      <div class="stage-card plateau">
+        <div class="stage-num">STAGE 02</div>
+        <div class="stage-label">Implementing</div>
+        <div class="stage-desc">First workflow live and stable. Team familiar with Augie. ROI not yet measured.</div>
+        <ul class="stage-bullets">
+          <li>Single workflow operational</li>
+          <li>Dispatchers using Augie daily</li>
+          <li>Stable but not expanding</li>
+          <li style="color: #C8A050;">⚠ Most accounts stop here</li>
+        </ul>
+        <span class="stage-pill pill-amber">Plateau risk</span>
+      </div>
+    </div>
+
+    <div class="stage-col">
+      <div class="stage-card">
+        <div class="stage-num">STAGE 03</div>
+        <div class="stage-label">Expanding</div>
+        <div class="stage-desc">ROI documented in numbers. Second workflow live. CS driving the maturity conversation.</div>
+        <ul class="stage-bullets">
+          <li>2+ workflows adopted</li>
+          <li>ROI visible to leadership</li>
+          <li>Team lead coaching to Augie-first</li>
+          <li>NDR above 110%</li>
+        </ul>
+        <span class="stage-pill pill-teal">Expanding</span>
+      </div>
+    </div>
+
+    <div class="stage-col">
+      <div class="stage-card target">
+        <div class="stage-num">STAGE 04</div>
+        <div class="stage-label">Operational DNA</div>
+        <div class="stage-desc">Augie is how the business operates. New hires onboard to it. Cannot go back.</div>
+        <ul class="stage-bullets">
+          <li>All workflows adopted</li>
+          <li>New hires trained on Day 1</li>
+          <li>Customer is a reference account</li>
+          <li>NDR 130%+. Full ARR unlocked</li>
+        </ul>
+        <span class="stage-pill pill-green">Full ARR</span>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- CLIENT BUSINESS REALITY ROW -->
+  <div class="reality-row">
+    <div class="reality-header">
+      <span class="reality-label">What this stage means for your business</span>
+      <div class="reality-rule"></div>
+    </div>
+    <div class="reality-grid">
+
+      <div class="reality-cell r0">
+        <div class="reality-pct">0<span>%</span></div>
+        <div class="reality-tagline">Every load is a human task</div>
+        <div class="reality-body">Team capacity is your ceiling. Adding volume means adding headcount. Margins compress as freight markets tighten.</div>
+        <span class="reality-metric">0% automated</span>
+      </div>
+
+      <div class="reality-cell r1">
+        <div class="reality-pct">~5<span>%</span></div>
+        <div class="reality-tagline">AI is in the building</div>
+        <div class="reality-body">Augie is being configured to your SOPs. Your team is learning. First workflow not yet live — but the investment is made.</div>
+        <span class="reality-metric">PoC in flight</span>
+      </div>
+
+      <div class="reality-cell r2">
+        <div class="reality-pct">20<span>%</span></div>
+        <div class="reality-tagline">Augie handles some, humans verify all</div>
+        <div class="reality-body">One workflow stable. ~20–30% of that workflow's volume runs through Augie. Team still checks everything. Augie is a tool, not a teammate yet.</div>
+        <span class="reality-metric">⚠ Plateau risk here</span>
+      </div>
+
+      <div class="reality-cell r3">
+        <div class="reality-pct">60<span>%</span></div>
+        <div class="reality-tagline">Team defaults to Augie first</div>
+        <div class="reality-body">50–80% of targeted load volume running through Augie across 2+ workflows. Supervisors coach to it. Loads per rep compounding. Switching feels costly.</div>
+        <span class="reality-metric">2+ workflows live</span>
+      </div>
+
+      <div class="reality-cell r4">
+        <div class="reality-pct">90<span>%</span></div>
+        <div class="reality-tagline">Humans own exceptions and growth</div>
+        <div class="reality-body">90%+ of operational tasks Augie-driven. New hires don't know another way to work. Your competitive moat is structural — not just faster, but different.</div>
+        <span class="reality-metric">ROI tracked and exceeded</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-callout">
+    <div class="callout-dot"></div>
+    <p class="callout-text">
+      <strong>The CoS builds the operating system that moves every account up this arc.</strong>
+      The QBR template, the expansion playbook, the CS accountability cadence — all of it is designed around one question asked at every review: what is the one thing we are doing this quarter to move this account from its current stage to the next one?
+    </p>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-logo">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+        <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#4CAF72" stroke-width="1.2"/>
+      </svg>
+      augment
+    </div>
+    <div class="footer-label">CONFIDENTIAL · INTERNAL USE</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 2 — CUSTOMER JOURNEY
+═══════════════════════════════════════ -->
+<div class="slide" id="slide-1">
+
+  <div class="slide-eyebrow">Your journey with Augment</div>
+  <h1 class="slide-title">A dedicated team at <strong>every stage</strong></h1>
+  <p class="slide-subtitle">From first conversation to operational excellence — the right person from the Augment team walks with you through every phase of the journey.</p>
+
+  <div class="journey-phases">
+
+    <!-- AE -->
+    <div class="phase-col col-ae">
+      <div class="silhouette-wrap">
+        <div class="silhouette">
+          <div class="sil-head" style="width:28px;height:28px;"></div>
+          <div class="sil-body" style="width:40px;height:36px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-header">Sales</div>
+        <div class="phase-role">Account Executive</div>
+        <div class="phase-stage">Stage 0 → 1</div>
+        <ul class="phase-items">
+          <li>Qualifies operational fit</li>
+          <li>Designs PoC scope</li>
+          <li>Defines success criteria</li>
+          <li>Introduces the FDE</li>
+        </ul>
+        <span class="phase-milestone">PoC signed</span>
+      </div>
+    </div>
+
+    <!-- FDE -->
+    <div class="phase-col col-fde">
+      <div class="silhouette-wrap duo">
+        <div class="silhouette">
+          <div class="sil-head" style="width:30px;height:30px;"></div>
+          <div class="sil-body" style="width:44px;height:40px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-header">Implementation</div>
+        <div class="phase-role">Forward-Deployed Engineer</div>
+        <div class="phase-stage">Stage 1 → 2</div>
+        <ul class="phase-items">
+          <li>Embeds on-site with your team</li>
+          <li>Maps your SOPs and workflows</li>
+          <li>Configures and integrates Augie</li>
+          <li>Trains every dispatcher</li>
+          <li>Runs go-live alongside you</li>
+        </ul>
+        <span class="phase-milestone">First workflow live</span>
+      </div>
+    </div>
+
+    <!-- CS -->
+    <div class="phase-col col-cs">
+      <div class="silhouette-wrap duo">
+        <div class="silhouette" style="margin-right:-10px;">
+          <div class="sil-head" style="width:30px;height:30px;"></div>
+          <div class="sil-body" style="width:44px;height:40px;margin-top:4px;"></div>
+        </div>
+        <div class="silhouette">
+          <div class="sil-head small" style="width:22px;height:22px;margin-top:8px;"></div>
+          <div class="sil-body small" style="width:32px;height:32px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-header">Adoption</div>
+        <div class="phase-role">Customer Success + Your Champion</div>
+        <div class="phase-stage">Stage 2 → 3</div>
+        <ul class="phase-items">
+          <li>Drives adoption beyond go-live</li>
+          <li>Runs structured QBRs</li>
+          <li>Documents ROI in numbers</li>
+          <li>Scopes second workflow</li>
+          <li>Coaches your internal champion</li>
+        </ul>
+        <span class="phase-milestone">ROI proven · expanding</span>
+      </div>
+    </div>
+
+    <!-- Strategic -->
+    <div class="phase-col col-partner">
+      <div class="silhouette-wrap trio">
+        <div class="silhouette" style="margin-right:-8px;">
+          <div class="sil-head" style="width:26px;height:26px;margin-top:6px;"></div>
+          <div class="sil-body" style="width:38px;height:34px;margin-top:4px;"></div>
+        </div>
+        <div class="silhouette" style="z-index:1;">
+          <div class="sil-head" style="width:30px;height:30px;"></div>
+          <div class="sil-body" style="width:44px;height:40px;margin-top:4px;"></div>
+        </div>
+        <div class="silhouette" style="margin-left:-8px;">
+          <div class="sil-head small" style="width:22px;height:22px;margin-top:10px;"></div>
+          <div class="sil-body small" style="width:32px;height:32px;margin-top:4px;"></div>
+        </div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-header">Strategic partnership</div>
+        <div class="phase-role">CS + Exec + Your Team</div>
+        <div class="phase-stage">Stage 3 → 4</div>
+        <ul class="phase-items">
+          <li>Quarterly expansion planning</li>
+          <li>New vertical exploration</li>
+          <li>Product advisory group</li>
+          <li>Reference account</li>
+          <li>Full ARR unlocked</li>
+        </ul>
+        <span class="phase-milestone">Operational DNA</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-bar">
+    <div class="timeline-track">
+      <div class="timeline-fill" style="width:100%;background:linear-gradient(to right,#1D2F42,#3A3018,#163228,#1A3325);"></div>
+    </div>
+    <div class="timeline-dots">
+      <div class="timeline-dot" style="border-color:#6B9FD4;background:#131A25;">
+        <div class="timeline-dot-label" style="color:#6B9FD4;">Day 1</div>
+      </div>
+      <div class="timeline-dot" style="border-color:var(--aug-amber);background:var(--aug-amber-lo);">
+        <div class="timeline-dot-label" style="color:var(--aug-amber);">Go-live</div>
+      </div>
+      <div class="timeline-dot" style="border-color:#5EC4A8;background:#0F2020;">
+        <div class="timeline-dot-label" style="color:#5EC4A8;">ROI proven</div>
+      </div>
+      <div class="timeline-dot" style="border-color:var(--aug-green);background:var(--aug-green-lo);">
+        <div class="timeline-dot-label" style="color:var(--aug-green);">Full ARR</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- CLIENT TEAM ROW -->
+  <div class="client-row">
+    <div class="client-row-header">
+      <span class="client-row-label">Your team — shipper vertical</span>
+      <div class="client-row-rule"></div>
+    </div>
+    <div class="client-row-grid">
+
+      <!-- Phase 1: Sales — EVP/VP as exec sponsor -->
+      <div class="client-cell">
+        <div class="client-personas">
+
+          <div class="client-persona">
+            <div class="csil active-exec">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">EVP / VP Supply Chain</div>
+              <div class="client-role-title">Executive sponsor</div>
+              <div class="client-role-note">Owns the logistics budget. Approves the PoC. This person's pain is the business case.</div>
+              <span class="engagement-tag tag-exec">Decision maker</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Phase 2: FDE — Director champion + Ops Manager on the floor -->
+      <div class="client-cell">
+        <div class="client-personas">
+
+          <div class="client-persona">
+            <div class="csil active-dir">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Director of Transportation</div>
+              <div class="client-role-title">Internal champion</div>
+              <div class="client-role-note">Works with the FDE daily. Reviews SOPs. Owns the project internally.</div>
+              <span class="engagement-tag tag-dir">Project owner</span>
+            </div>
+          </div>
+
+          <div class="client-persona">
+            <div class="csil dir">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Logistics Ops Manager</div>
+              <div class="client-role-title">Floor champion</div>
+              <div class="client-role-note">Embedded with FDE on the floor. Validates workflows with real loads.</div>
+              <span class="engagement-tag tag-dir">Floor lead</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Phase 3: CS — Director still driving, Coordinators are the adopters -->
+      <div class="client-cell">
+        <div class="client-personas">
+
+          <div class="client-persona">
+            <div class="csil dir">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Director of Transportation</div>
+              <div class="client-role-title">Adoption driver</div>
+              <div class="client-role-note">Coaches team to Augie-first behavior. Attends QBRs. Documents the ROI case to leadership.</div>
+              <span class="engagement-tag tag-dir">ROI owner</span>
+            </div>
+          </div>
+
+          <div class="client-persona">
+            <div class="csil active-ops">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Transportation Coordinators</div>
+              <div class="client-role-title">Daily adopters</div>
+              <div class="client-role-note">Their buy-in determines whether adoption spreads or stalls. The most important people in Stage 3.</div>
+              <span class="engagement-tag tag-ops">Key adopters</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Phase 4: Strategic — EVP back in the room, director is now the advocate -->
+      <div class="client-cell">
+        <div class="client-personas">
+
+          <div class="client-persona">
+            <div class="csil active-exec">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">EVP / VP Supply Chain</div>
+              <div class="client-role-title">Expansion sponsor</div>
+              <div class="client-role-note">Back in the room for expansion scope and board-level ROI conversations.</div>
+              <span class="engagement-tag tag-exec">Strategic voice</span>
+            </div>
+          </div>
+
+          <div class="client-persona">
+            <div class="csil active-dir">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Director of Transportation</div>
+              <div class="client-role-title">Internal advocate</div>
+              <div class="client-role-note">Now sells Augie internally. Coaches new hires. Contributes to Augment's product roadmap.</div>
+              <span class="engagement-tag tag-dir">Advocate</span>
+            </div>
+          </div>
+
+          <div class="client-persona">
+            <div class="csil active-ops">
+              <div class="csil-head"></div>
+              <div class="csil-body"></div>
+            </div>
+            <div class="client-persona-info">
+              <div class="client-role-name">Full ops team</div>
+              <div class="client-role-title">Operating on Augie</div>
+              <div class="client-role-note">New hires learn Augie on Day 1. The old way is not an option.</div>
+              <span class="engagement-tag tag-ops">Fully adopted</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="bottom-callout">
+    <div class="callout-dot"></div>
+    <p class="callout-text">
+      <strong>No account should stall between Stage 2 and Stage 3.</strong>
+      That gap — stable implementation without expanding value — is the renewal risk every Augment CS lead is accountable for closing.
+      The CoS builds the system that makes the maturity journey visible, measurable, and unstoppable.
+    </p>
+  </div>
+
+  <div class="slide-footer">
+    <div class="footer-logo">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none">
+        <path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#4CAF72" stroke-width="1.2"/>
+      </svg>
+      augment
+    </div>
+    <div class="footer-label">CONFIDENTIAL · CUSTOMER FACING</div>
+  </div>
+
+</div>
+
+<script>
+function showSlide(i) {
+  document.querySelectorAll('.slide').forEach((s,idx) => {
+    s.classList.toggle('active', idx === i);
+  });
+  document.querySelectorAll('.nav-tab').forEach((t,idx) => {
+    t.classList.toggle('active', idx === i);
+  });
+}
+
+// ─── SLIDE 3: INTERNAL SCORING ──────────────────────────────────────
+const S3_COLS = [
+  {
+    id: 0, label: 'Pre-launch', cls: 'sc-prelaunch',
+    moments: [
+      {type:'impl',  name:'ROI & business case defined',
+       cos:'No compelling reason = no sustained adoption. Define the before-state metrics (loads/rep, invoice cycle, call volume) and the target outcome BEFORE the FDE starts. If the customer cannot state why they are changing, they will not change.'},
+      {type:'train', name:'Workflow diagnostic — team involved',
+       cos:'Involve the people doing the work, not just the VP. Dispatchers and team leads must participate in the diagnostic. Those asked to change who are not involved in planning will resist the change.'},
+      {type:'train', name:'SOP library built and approved',
+       cos:'Systems must align with the change. SOPs in Knowledge Hub must reflect how the team actually works, not an idealised version. Misaligned SOPs = Augie making wrong decisions from Day 1.'},
+      {type:'impl',  name:'TMS integration complete',
+       cos:'Technical systems must be aligned before go-live. Integration gaps discovered after launch destroy trust. FDE signs off on this gate — no exceptions.'},
+      {type:'train', name:'Training plan confirmed',
+       cos:'Announcing go-live is not the same as implementing it. Training must be scheduled and confirmed before the go-live date is set — not after. If undated, move the launch.'},
+      {type:'train', name:'Champion identified — includes informal leaders',
+       cos:'Change team must include early adopters AND informal leaders, not just the title-holders. The dispatcher everyone listens to is more important than the team lead on paper. Name both.'},
+    ]
+  },
+  {
+    id: 1, label: 'Training & go-live', cls: 'sc-golive',
+    moments: [
+      {type:'train', name:'Dispatcher training complete',
+       cos:'People must be enabled on new skills before being held accountable for them. Track completion by name. Any dispatcher not trained before go-live is a known adoption risk — document it.'},
+      {type:'train', name:'Team lead training complete',
+       cos:'Those leading the change must model the behaviour. A team lead who is not fluent in Augie cannot coach to it. This is the most important training session. Skeptical team lead = skeptical team.'},
+      {type:'train', name:'Management briefed — vision communicated',
+       cos:'Leadership must communicate a compelling vision AND stay focused. Brief the VP on what Augie changes and why it matters — not just what it does. Death by 1,000 initiatives starts here if Augie is not prioritised from the top.'},
+      {type:'impl',  name:'First workflow live',
+       cos:'Go-live is not the finish line — it is the start of implementation. CS lead daily summary to team lead for first 14 days. Active monitoring, not passive observation.'},
+      {type:'impl',  name:'Escalation protocol written and shared',
+       cos:'People\'s concerns must be surfaced and addressed. A written escalation protocol is how dispatchers raise concerns without feeling they are failing. No protocol = concerns go underground and become resistance.'},
+    ]
+  },
+  {
+    id: 2, label: 'Adoption & ROI', cls: 'sc-adopt',
+    moments: [
+      {type:'train', name:'Champion coaching peers daily',
+       cos:'The champion must model and communicate the new behaviours — not just use Augie themselves. If they are not visibly coaching peers, they are not championing. Observe in the weekly check-in.'},
+      {type:'impl',  name:'Zero bypass behavior',
+       cos:'People must be held accountable for implementing the change. Every bypass is an unaccountable exception. Track weekly. Target 0%. Escalate to team lead within 24 hours of any bypass.'},
+      {type:'hand',  name:'FDE to CS handoff complete',
+       cos:'Credibility must transfer with the relationship. Formal handoff meeting — not an email. CS lead must be able to answer any question without calling the FDE within 2 weeks of handoff.'},
+      {type:'impl',  name:'30-day ROI review complete',
+       cos:'Progress must be measured and recognised. If the customer cannot articulate the ROI in numbers at Day 30, two things have failed: measurement and recognition. Both are CS failures. Escalate immediately.'},
+      {type:'impl',  name:'Second workflow scoped',
+       cos:'Scope at the 30-day review — momentum is the asset. Losing focus is how change stalls. The second workflow keeps the initiative alive before the first one becomes routine.'},
+    ]
+  },
+  {
+    id: 3, label: 'Expansion & DNA', cls: 'sc-expand',
+    moments: [
+      {type:'train', name:'New hire onboarding includes Augie',
+       cos:'Culture is the most powerful force in any organisation. When new hires learn Augie before the old way, the culture has changed. Until this happens, the adoption is one departure away from collapse.'},
+      {type:'impl',  name:'Second workflow fully adopted',
+       cos:'Track separately from the first. Different workflows surface different resisters. Every workflow needs its own early adopter identified before launch.'},
+      {type:'impl',  name:'NDR above 110%',
+       cos:'Below 110% at first renewal triggers a formal account review. This is the CoS primary CS metric in the board deck. It is also the proof that the business case defined in pre-launch was achieved.'},
+      {type:'train', name:'Team lead coaching unprompted',
+       cos:'This is the culture signal. Ask CS lead: when did the team lead last correct a bypass without being asked? If they cannot answer, the culture has not changed — only the compliance.'},
+      {type:'hand',  name:'CS to strategic partnership',
+       cos:'Reserve for NDR 120%+ accounts with active expansion pipeline. These are the Series B proof points and reference accounts. Recognise what they have achieved — publicly.'},
+    ]
+  }
+];
+
+const s3States = S3_COLS.map(c => c.moments.map(() => 0));
+
+function s3Advance(ci, mi) {
+  s3States[ci][mi] = (s3States[ci][mi] + 1) % 3;
+  s3Render();
+}
+
+function s3TypeClass(t) {
+  if (t === 'train') return 'mtype-train';
+  if (t === 'hand')  return 'mtype-hand';
+  return 'mtype-impl';
+}
+
+function s3TypeLabel(t) {
+  if (t === 'train') return 'training';
+  if (t === 'hand')  return 'handoff';
+  return 'impl';
+}
+
+function s3Render() {
+  const grid = document.getElementById('s3-grid');
+  grid.innerHTML = '';
+  let total = 0, done = 0;
+  const breakdown = [];
+
+  S3_COLS.forEach((col, ci) => {
+    const d = s3States[ci].filter(s => s === 2).length;
+    const t = col.moments.length;
+    total += t; done += d;
+    breakdown.push({label: col.label, done: d, total: t, cls: col.cls});
+
+    const pct = Math.round(d / t * 100);
+    const div = document.createElement('div');
+    div.className = 'score-col ' + col.cls;
+
+    let html = '<div class="score-col-head">';
+    html += '<span class="score-col-label">' + col.label + '</span>';
+    html += '<span class="score-col-count">' + d + '/' + t + '</span>';
+    html += '</div>';
+    html += '<div class="score-bar-mini"><div class="score-bar-fill" style="width:' + pct + '%"></div></div>';
+
+    col.moments.forEach((m, mi) => {
+      const st = s3States[ci][mi];
+      const sc = ['m0','m1','m2'][st];
+      const ic = ['○','◑','●'][st];
+      html += '<div class="moment-item" onclick="s3Advance(' + ci + ',' + mi + ')">';
+      html += '<button class="m-btn ' + sc + '" onclick="event.stopPropagation();s3Advance(' + ci + ',' + mi + ')">' + ic + '</button>';
+      html += '<div class="moment-text">';
+      html += '<div class="has-tip">';
+      html += '<span class="moment-name">' + m.name + '</span>';
+      html += '<div class="tip"><span class="tip-label">Why this matters</span>' + m.cos + '</div>';
+      html += '</div>';
+      html += '<span class="moment-type ' + s3TypeClass(m.type) + '">' + s3TypeLabel(m.type) + '</span>';
+      html += '</div></div>';
+    });
+
+    div.innerHTML = html;
+    grid.appendChild(div);
+  });
+
+  const pct = Math.round(done / total * 100);
+  const hEl = document.getElementById('s3-pct');
+  hEl.textContent = pct + '%';
+  hEl.style.color = pct >= 70 ? '#4CAF72' : pct >= 40 ? '#D4A843' : '#8A9088';
+  document.getElementById('s3-sub').textContent = done + ' / ' + total + ' moments';
+
+  // Breakdown bars
+  document.getElementById('s3-breakdown').innerHTML = breakdown.map(b => {
+    const p = Math.round(b.done / b.total * 100);
+    const colors = {'sc-prelaunch':'#D4A843','sc-golive':'#6B9FD4','sc-adopt':'#5EC4A8','sc-expand':'#4CAF72'};
+    const col = colors[b.cls] || '#4CAF72';
+    return '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<div style="font-size:10px;color:var(--aug-gray2);width:110px;flex-shrink:0;font-family:var(--font-mono);">' + b.label + '</div>' +
+      '<div style="flex:1;height:3px;background:var(--aug-border);border-radius:2px;overflow:hidden;">' +
+        '<div style="height:100%;width:' + p + '%;background:' + col + ';border-radius:2px;"></div>' +
+      '</div>' +
+      '<div style="font-size:10px;color:var(--aug-gray2);width:28px;text-align:right;font-family:var(--font-mono);">' + b.done + '/' + b.total + '</div>' +
+    '</div>';
+  }).join('');
+
+  // Renewal signal
+  const tag = document.getElementById('s3-renewal-tag');
+  const sig = document.getElementById('s3-signal');
+  const cos = document.getElementById('s3-cos-action');
+  const box = document.getElementById('s3-renewal-box');
+  tag.style.display = 'inline-block';
+  if (pct >= 70) {
+    sig.textContent = 'Renewal expected. Expansion conversation open.';
+    cos.textContent = 'CoS: Surface expansion options at next QBR.';
+    tag.className = 'renewal-tag renew-strong';
+    tag.textContent = 'STRONG';
+    box.style.borderColor = '#1A3325';
+  } else if (pct >= 40) {
+    sig.textContent = 'Renewal likely with CS attention. Gap plan required.';
+    cos.textContent = 'CoS: Review incomplete moments with CS lead this week.';
+    tag.className = 'renewal-tag renew-caution';
+    tag.textContent = 'WATCH';
+    box.style.borderColor = '#3A3018';
+  } else if (done === 0) {
+    sig.textContent = 'Activate moments to assess.';
+    cos.textContent = '';
+    tag.style.display = 'none';
+    box.style.borderColor = 'var(--aug-border)';
+  } else {
+    sig.textContent = 'At risk. CoS-led intervention needed.';
+    cos.textContent = 'CoS: Escalate to Justin within 48 hours.';
+    tag.className = 'renewal-tag renew-risk';
+    tag.textContent = 'AT RISK';
+    box.style.borderColor = '#3A1010';
+  }
+
+  // Narrative
+  const narr = document.getElementById('s3-narrative');
+  if (done === 0) {
+    narr.innerHTML = '<strong>Board narrative:</strong> Activate moments above to generate the board update narrative.';
+  } else {
+    narr.innerHTML = '<strong>Board narrative:</strong> This account is at ' + pct + '% health (' + done + '/' + total + ' moments). ' +
+      (pct >= 70 ? 'Renewal expected. NDR tracking above 110%. Expansion pipeline open for next quarter.' :
+       pct >= 40 ? (total - done) + ' moments outstanding. CS lead presenting gap plan this week. Renewal likely with focused attention.' :
+       'Renewal at risk. CoS-led intervention initiated. Gap plan and leadership briefing scheduled.');
+  }
+}
+
+// ─── SLIDE 4: QBR SCORECARD ─────────────────────────────────────────
+const QBR_DATA = {
+  1: {
+    arc: ['current','upcoming','upcoming','upcoming'],
+    arcLabels: ['Stage 1\nExploring','Stage 2\nImplementing','Stage 3\nExpanding','Stage 4\nDNA'],
+    metrics: [
+      {label:'Workflows live', val:'0', bar:0},
+      {label:'Augie automation', val:'~5%', bar:5},
+      {label:'Loads per rep/day', val:'Baseline', bar:10},
+      {label:'PoC status', val:'In flight', bar:20},
+    ],
+    wins: [
+      {text:'PoC agreement signed with defined success criteria', sub:'Contract executed'},
+      {text:'FDE embedded with your operations team', sub:'Workflow diagnostic underway'},
+      {text:'TMS integration scoping complete', sub:'API validation in progress'},
+    ],
+    next: [
+      {text:'Complete SOP documentation and Knowledge Hub build', who:'FDE + Director of Transportation'},
+      {text:'Schedule and complete all dispatcher training sessions', who:'CS Lead + Logistics Ops Manager'},
+      {text:'Go-live on first workflow — track-and-trace calls', who:'FDE lead'},
+    ],
+    focus: 'This quarter our shared goal is getting Augie live on your first workflow with full team confidence. <strong>Success looks like:</strong> every dispatcher has been trained, the escalation protocol is written down, and Augie is handling track-and-trace calls without manual bypass.',
+  },
+  2: {
+    arc: ['done','current','upcoming','upcoming'],
+    arcLabels: ['Stage 1\nExploring','Stage 2\nImplementing','Stage 3\nExpanding','Stage 4\nDNA'],
+    metrics: [
+      {label:'Workflows live', val:'1', bar:25},
+      {label:'Augie automation', val:'~20%', bar:20},
+      {label:'Loads per rep/day', val:'10 → 18', bar:45},
+      {label:'Invoice cycle', val:'Tracking', bar:30},
+    ],
+    wins: [
+      {text:'First workflow live and stable — track-and-trace calls', sub:'Dispatchers using Augie daily'},
+      {text:'FDE to CS handoff completed', sub:'Ongoing CS relationship active'},
+      {text:'Team lead trained and coaching the floor', sub:'Adoption rate above 80%'},
+    ],
+    next: [
+      {text:'Document ROI in numbers — loads per rep before and after', who:'CS Lead + Director of Transportation'},
+      {text:'Present ROI case to VP Supply Chain', who:'Director of Transportation'},
+      {text:'Scope second workflow — appointment scheduling', who:'CS Lead'},
+    ],
+    focus: 'You have reached stable implementation. <strong>The most important thing we do this quarter</strong> is put your ROI into numbers your leadership team can see. Once we can say "Augie changed X by Y%", the journey from nice-to-have to need-to-have has begun.',
+  },
+  3: {
+    arc: ['done','done','current','upcoming'],
+    arcLabels: ['Stage 1\nExploring','Stage 2\nImplementing','Stage 3\nExpanding','Stage 4\nDNA'],
+    metrics: [
+      {label:'Workflows live', val:'2', bar:50},
+      {label:'Augie automation', val:'~60%', bar:60},
+      {label:'Loads per rep/day', val:'18 → 28', bar:70},
+      {label:'Invoice cycle', val:'-40% faster', bar:75},
+    ],
+    wins: [
+      {text:'ROI documented and presented to VP Supply Chain', sub:'Loads per rep up 55% since go-live'},
+      {text:'Second workflow live — appointment scheduling', sub:'Both workflows above 80% adoption'},
+      {text:'Team defaults to Augie-first for covered workflows', sub:'Near-zero bypass rate this quarter'},
+    ],
+    next: [
+      {text:'Scope third workflow — carrier rate negotiation', who:'CS Lead + Director of Transportation'},
+      {text:'Present Augie story at upcoming leadership offsite', who:'VP Supply Chain'},
+      {text:'Establish new hire Augie onboarding on Day 1', who:'Director of Transportation + HR'},
+    ],
+    focus: '<strong>You are past the plateau.</strong> Expanding from two workflows to three — and establishing Augie as part of how new hires learn the job — is what transforms an adoption story into an operational moat. This quarter we move from "Augie is working" to "Augie is how we work."',
+  },
+  4: {
+    arc: ['done','done','done','current'],
+    arcLabels: ['Stage 1\nExploring','Stage 2\nImplementing','Stage 3\nExpanding','Stage 4\nDNA'],
+    metrics: [
+      {label:'Workflows live', val:'4+', bar:100},
+      {label:'Augie automation', val:'90%+', bar:90},
+      {label:'Loads per rep/day', val:'10 → 30+', bar:100},
+      {label:'NDR', val:'130%+', bar:100},
+    ],
+    wins: [
+      {text:'Augie operating across all targeted workflows', sub:'New hires onboard to Augie on Day 1'},
+      {text:'Director of Transportation coaching team unprompted', sub:'Augie-first is now cultural'},
+      {text:'ROI tracked and exceeded across every workflow', sub:'Full ARR unlocked. NDR above 130%.'},
+    ],
+    next: [
+      {text:'Explore new vertical expansion opportunities with Augment', who:'VP Supply Chain + Augment Exec'},
+      {text:'Join Augment customer advisory group', who:'Director of Transportation'},
+      {text:'Share your story — reference account for new prospects', who:'Your team + Augment CS'},
+    ],
+    focus: '<strong>You have reached operational DNA.</strong> Augie is not a tool your team uses — it is how your logistics organisation operates. The question now is not how to get more from Augie, but which parts of the business we expand into next. Your competitive advantage is structural.',
+  }
+};
+
+let currentQBRStage = 2;
+
+function setQBRStage(n) {
+  currentQBRStage = n;
+  document.querySelectorAll('.qbr-stage-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === n - 1);
+  });
+  renderQBR();
+}
+
+function renderQBR() {
+  const d = QBR_DATA[currentQBRStage];
+  const stageNames = ['Exploring','Implementing','Expanding','Operational DNA'];
+
+  document.getElementById('qbr-stage-badge').textContent = 'Stage ' + currentQBRStage;
+
+  // Arc
+  const arc = document.getElementById('qbr-arc');
+  const arcLabels = d.arcLabels;
+  arc.innerHTML = d.arc.map((state, i) => {
+    const lines = arcLabels[i].split('\n');
+    return '<div class="qbr-stage-node">' +
+      '<div class="qbr-dot ' + state + '">' + (state === 'done' ? '✓' : (i + 1)) + '</div>' +
+      '<div class="qbr-stage-name ' + state + '">' + lines[0] + '<br><span style="font-weight:300;opacity:0.7;">' + lines[1] + '</span></div>' +
+    '</div>';
+  }).join('');
+
+  // Metrics
+  document.getElementById('qbr-metrics').innerHTML =
+    '<div style="font-size:10px;font-family:var(--font-mono);color:var(--aug-gray2);letter-spacing:.04em;margin-bottom:12px;">KEY METRICS</div>' +
+    d.metrics.map(m =>
+      '<div class="qbr-metric">' +
+        '<div class="qbr-metric-label">' + m.label + '</div>' +
+        '<div class="qbr-metric-bar"><div class="qbr-metric-fill" style="width:' + m.bar + '%;"></div></div>' +
+        '<div class="qbr-metric-val">' + m.val + '</div>' +
+      '</div>'
+    ).join('');
+
+  // Wins
+  document.getElementById('qbr-wins').innerHTML = d.wins.map(w =>
+    '<div class="qbr-win">' +
+      '<div class="qbr-win-dot"></div>' +
+      '<div><div class="qbr-win-text">' + w.text + '</div>' +
+      '<div class="qbr-win-sub">' + w.sub + '</div></div>' +
+    '</div>'
+  ).join('');
+
+  // Next quarter
+  document.getElementById('qbr-next').innerHTML = d.next.map((n, i) =>
+    '<div class="qbr-next-item">' +
+      '<div class="qbr-next-num">' + (i+1) + '</div>' +
+      '<div><div class="qbr-next-text">' + n.text + '</div>' +
+      '<div class="qbr-next-who">' + n.who + '</div></div>' +
+    '</div>'
+  ).join('');
+
+  // Focus
+  document.getElementById('qbr-focus').innerHTML =
+    '<div class="qbr-focus-head">QBR FOCUS — THIS QUARTER</div>' +
+    '<div class="qbr-focus-text">' + d.focus + '</div>';
+}
+
+// Init — deferred until DOM is fully parsed
+document.addEventListener('DOMContentLoaded', function() {
+  s3Render();
+  renderQBR();
+});
+
+</script>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 3 — INTERNAL SCORING
+═══════════════════════════════════════ -->
+<div class="slide" id="slide-2">
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px;">
+    <div>
+      <div class="slide-eyebrow">Internal · CS + CoS view</div>
+      <h1 class="slide-title">Augie implementation <strong>tracker</strong></h1>
+      <p class="slide-subtitle" style="margin-bottom:16px;">Click each circle to advance status. Every moment includes a CoS accountability note. Used in weekly CS reviews.</p>
+    </div>
+    <div style="text-align:right;padding-top:8px;">
+      <div style="font-size:10px;font-family:var(--font-mono);color:var(--aug-gray2);margin-bottom:3px;letter-spacing:.04em;">ACCOUNT HEALTH</div>
+      <div style="font-size:28px;font-weight:300;letter-spacing:-0.04em;" id="s3-pct">0%</div>
+      <div style="font-size:10px;font-family:var(--font-mono);color:var(--aug-gray2);" id="s3-sub">0 / 21 moments</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap;font-size:11px;color:var(--aug-gray);">
+    <span><span class="moment-type mtype-train">training</span> &nbsp;CS owns</span>
+    <span><span class="moment-type mtype-impl">impl</span> &nbsp;FDE / CS owns</span>
+    <span><span class="moment-type mtype-hand">handoff</span> &nbsp;transition moment</span>
+    <span style="color:var(--aug-gray2);">Click circles to advance · hollow = not started · amber = in progress · green = best in class</span>
+  </div>
+
+  <div class="scoring-grid" id="s3-grid"></div>
+
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-label">STAGE BREAKDOWN</div>
+      <div id="s3-breakdown" style="display:flex;flex-direction:column;gap:6px;margin-top:4px;"></div>
+    </div>
+    <div class="stat-box" id="s3-renewal-box">
+      <div class="stat-label">RENEWAL SIGNAL</div>
+      <div style="font-size:13px;font-weight:500;color:var(--aug-white);margin-top:4px;margin-bottom:4px;" id="s3-signal">Activate moments to assess</div>
+      <div style="font-size:11px;color:var(--aug-gray);" id="s3-cos-action"></div>
+      <span class="renewal-tag renew-caution" id="s3-renewal-tag" style="display:none;"></span>
+    </div>
+  </div>
+
+  <div class="narrative-box" id="s3-narrative">
+    <strong>Board narrative:</strong> Activate moments above to generate the board update narrative.
+  </div>
+
+  <div class="slide-footer" style="margin-top:20px;">
+    <div class="footer-logo">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#4CAF72" stroke-width="1.2"/></svg>
+      augment
+    </div>
+    <div class="footer-label">CONFIDENTIAL · INTERNAL USE ONLY</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════
+     SLIDE 4 — QBR SCORECARD
+═══════════════════════════════════════ -->
+<div class="slide" id="slide-3">
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px;">
+    <div>
+      <div class="slide-eyebrow">Quarterly business review</div>
+      <h1 class="slide-title">Your Augie journey — <strong>this quarter</strong></h1>
+    </div>
+    <div>
+      <div class="account-label">ACCOUNT</div>
+      <div class="account-name">
+        <span id="qbr-acct-name">Armstrong Transport Group</span>
+        <span class="account-stage-badge" id="qbr-stage-badge">Stage 2</span>
+      </div>
+      <div style="font-size:11px;color:var(--aug-gray);margin-top:2px;" id="qbr-date">Q1 2026 · CS Lead review</div>
+    </div>
+  </div>
+
+  <!-- Stage selector -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <span style="font-size:10px;font-family:var(--font-mono);color:var(--aug-gray2);letter-spacing:.04em;">VIEW STAGE:</span>
+    <button class="qbr-stage-btn" onclick="setQBRStage(1)">Stage 1 — Exploring</button>
+    <button class="qbr-stage-btn active" onclick="setQBRStage(2)">Stage 2 — Implementing</button>
+    <button class="qbr-stage-btn" onclick="setQBRStage(3)">Stage 3 — Expanding</button>
+    <button class="qbr-stage-btn" onclick="setQBRStage(4)">Stage 4 — DNA</button>
+  </div>
+
+  <!-- Top row: arc + metrics -->
+  <div class="qbr-top">
+
+    <div class="qbr-stage-map" id="qbr-arc">
+      <!-- Populated by JS -->
+    </div>
+
+    <div class="qbr-metrics-box" id="qbr-metrics">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+
+  <!-- Bottom: wins + next quarter -->
+  <div class="qbr-bottom">
+
+    <div class="qbr-section">
+      <div class="qbr-section-head" style="color:#4CAF72;">This quarter — what you achieved</div>
+      <div id="qbr-wins"></div>
+    </div>
+
+    <div class="qbr-section">
+      <div class="qbr-section-head" style="color:#D4A843;">Next quarter — what we focus on together</div>
+      <div id="qbr-next"></div>
+    </div>
+
+  </div>
+
+  <!-- QBR focus -->
+  <div class="qbr-focus-box" id="qbr-focus"></div>
+
+  <div class="slide-footer">
+    <div class="footer-logo">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#4CAF72" stroke-width="1.2"/></svg>
+      augment
+    </div>
+    <div class="footer-label">CONFIDENTIAL · CUSTOMER FACING</div>
+  </div>
+
+</div>
+
+
+<!-- ═══════════════════════════════════════
+     SLIDE 5 — ENGAGEMENT LOOP
+═══════════════════════════════════════ -->
+<div class="slide" id="slide-4">
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px;">
+    <div>
+      <div class="slide-eyebrow">Commercial operating system</div>
+      <h1 class="slide-title">The Augie <strong>engagement loop</strong></h1>
+      <p class="slide-subtitle" style="margin-bottom:0;">Two interlocking motions. Velocity stalls at the crossover when the FDE-to-CS handoff fails.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:20px;padding-top:14px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:#C8A040;font-family:var(--font-mono);">
+        <div style="width:20px;height:2px;background:#C8A040;border-radius:1px;"></div>Land + Implement
+      </div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:#4CAF72;font-family:var(--font-mono);">
+        <div style="width:20px;height:2px;background:#4CAF72;border-radius:1px;"></div>Expand + Grow
+      </div>
+    </div>
+  </div>
+
+  <!-- Loop diagram: SVG behind, HTML cards overlaid via absolute positioning -->
+  <div style="position:relative;width:100%;height:340px;margin-bottom:16px;">
+
+    <!-- SVG: loops + arrows + dots only, no text labels on paths -->
+    <svg viewBox="0 0 920 340" width="100%" height="100%"
+         style="position:absolute;top:0;left:0;" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+      <defs>
+        <marker id="e-am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#C8A040" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="e-gn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#4CAF72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="e-rd" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M1 2L8 5L1 8" fill="none" stroke="#C06050" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- LEFT LOOP — two arcs forming a closed oval, CW -->
+      <!-- Top arc: crossover (460,170) → top (285,60) → left (110,170) -->
+      <path d="M 455,163  C 430,110  350,62  270,62  C 180,62  112,110  112,170"
+            fill="none" stroke="#C8A040" stroke-width="2.5" stroke-opacity="0.6"
+            marker-end="url(#e-am)"/>
+      <!-- Bottom arc: left (110,170) → bottom (285,278) → crossover (460,170) -->
+      <path d="M 112,170  C 112,230  180,278  270,278  C 350,278  430,228  455,175"
+            fill="none" stroke="#C8A040" stroke-width="2.5" stroke-opacity="0.6"
+            marker-end="url(#e-am)"/>
+
+      <!-- RIGHT LOOP — two arcs CW -->
+      <!-- Top arc: crossover → top (635,60) → right (808,170) -->
+      <path d="M 465,163  C 490,110  570,62  650,62  C 740,62  808,110  808,170"
+            fill="none" stroke="#4CAF72" stroke-width="2.5" stroke-opacity="0.6"
+            marker-end="url(#e-gn)"/>
+      <!-- Bottom arc: right → bottom (635,278) → crossover -->
+      <path d="M 808,170  C 808,230  740,278  650,278  C 570,278  490,228  465,175"
+            fill="none" stroke="#4CAF72" stroke-width="2.5" stroke-opacity="0.6"
+            marker-end="url(#e-gn)"/>
+
+      <!-- Loop fill — subtle interior tint -->
+      <ellipse cx="283" cy="170" rx="148" ry="108" fill="#C8A040" fill-opacity="0.03"/>
+      <ellipse cx="637" cy="170" rx="148" ry="108" fill="#4CAF72" fill-opacity="0.03"/>
+
+      <!-- ANCHOR DOTS on loop at node positions -->
+      <!-- AE (top of left loop ~285,62) -->
+      <circle cx="270" cy="62" r="5" fill="#C8A040" stroke="#101210" stroke-width="2"/>
+      <!-- CLIENT (far left ~112,170) -->
+      <circle cx="112" cy="170" r="5" fill="#C8A040" stroke="#101210" stroke-width="2"/>
+      <!-- FDE (bottom of left loop ~285,278) -->
+      <circle cx="270" cy="278" r="5" fill="#C8A040" stroke="#101210" stroke-width="2"/>
+      <!-- CS (top of right loop ~635,62) -->
+      <circle cx="650" cy="62" r="5" fill="#4CAF72" stroke="#101210" stroke-width="2"/>
+      <!-- PRODUCT (far right ~808,170) -->
+      <circle cx="808" cy="170" r="5" fill="#4CAF72" stroke="#101210" stroke-width="2"/>
+      <!-- LEADERSHIP (bottom right ~635,278) -->
+      <circle cx="650" cy="278" r="5" fill="#4CAF72" stroke="#101210" stroke-width="2"/>
+
+      <!-- FDE → Product feedback arrow (dashed amber, crossing from left bottom to right mid) -->
+      <!-- From FDE anchor dot 270,278 curving across to Product dot 808,170 -->
+      <path d="M 278,272 C 400,240 580,220 800,172"
+            fill="none" stroke="#C8A040" stroke-width="1.5" stroke-dasharray="4 3"
+            stroke-opacity="0.55" marker-end="url(#e-am)"/>
+      <!-- Label mid-arc -->
+      <rect x="490" y="214" width="106" height="18" rx="9" fill="#1C1A14" stroke="#3A3018" stroke-width="0.5"/>
+      <text x="543" y="226" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="8" font-weight="500" fill="#9A7A30"
+            letter-spacing="0.04em">FDE → field intel</text>
+
+      <!-- LEADER LINES: dot to card edge (short, dashed) -->
+      <!-- AE dot 270,62 → card bottom centre ~270,13 (card 140×46 centred at 270,top=0) -->
+      <line x1="270" y1="57" x2="270" y2="46" stroke="#C8A040" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+      <!-- CLIENT dot 112,170 → card right edge ~58,170 (card right edge) -->
+      <line x1="107" y1="170" x2="90" y2="170" stroke="#C8A040" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+      <!-- FDE dot 270,278 → card top ~270,294 -->
+      <line x1="270" y1="283" x2="270" y2="296" stroke="#C8A040" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+      <!-- CS dot 650,62 → card bottom ~650,46 -->
+      <line x1="650" y1="57" x2="650" y2="46" stroke="#4CAF72" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+      <!-- PRODUCT dot 808,170 → card left ~832,170 -->
+      <line x1="813" y1="170" x2="832" y2="170" stroke="#4CAF72" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+      <!-- LEADERSHIP dot 650,278 → card top ~650,296 -->
+      <line x1="650" y1="283" x2="650" y2="296" stroke="#4CAF72" stroke-width="1" stroke-opacity="0.35" stroke-dasharray="3 2"/>
+
+      <!-- CROSSOVER NODE -->
+      <circle cx="460" cy="170" r="46" fill="#0E1410" stroke="#4CAF72" stroke-width="1.5"/>
+      <circle cx="460" cy="170" r="38" fill="#152818" stroke="none"/>
+
+      <!-- VELOCITY BREAK RING (dashed, outside crossover) -->
+      <circle cx="460" cy="170" r="60" fill="none"
+              stroke="#C06050" stroke-width="1.2" stroke-dasharray="5 3" stroke-opacity="0.55"/>
+
+      <!-- Crossover text rendered as SVG (short, centred) -->
+      <text x="460" y="164" text-anchor="middle"
+            font-family="'DM Sans',sans-serif" font-size="11" font-weight="700"
+            fill="#4CAF72" letter-spacing="0.05em">GO-LIVE</text>
+      <text x="460" y="179" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="9"
+            fill="#5A9870" letter-spacing="0.04em">crossover</text>
+
+      <!-- Arc direction labels — styled as visible pill badges -->
+      <!-- Left top arc: PoC signed -->
+      <rect x="140" y="76" width="96" height="20" rx="10" fill="#2E2615" stroke="#C8A040" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="188" y="90" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="9" font-weight="500" fill="#C8A040"
+            letter-spacing="0.05em">PoC signed</text>
+      <!-- Left bottom arc: First workflow live -->
+      <rect x="130" y="256" width="116" height="20" rx="10" fill="#2E2615" stroke="#C8A040" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="188" y="270" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="9" font-weight="500" fill="#C8A040"
+            letter-spacing="0.05em">First workflow</text>
+      <!-- Right top arc: Handoff -->
+      <rect x="694" y="76" width="80" height="20" rx="10" fill="#102018" stroke="#4CAF72" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="734" y="90" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="9" font-weight="500" fill="#4CAF72"
+            letter-spacing="0.05em">Handoff</text>
+      <!-- Right bottom arc: Expansion -->
+      <rect x="690" y="256" width="88" height="20" rx="10" fill="#102018" stroke="#4CAF72" stroke-width="1" stroke-opacity="0.7"/>
+      <text x="734" y="270" text-anchor="middle"
+            font-family="'DM Mono',monospace" font-size="9" font-weight="500" fill="#4CAF72"
+            letter-spacing="0.05em">Expansion</text>
+
+    </svg>
+
+    <!-- HTML ROLE CARDS: absolutely positioned, no overlap with loops -->
+
+    <!-- AE — centred above left loop dot (270,62). Card: 144×46, bottom at y≈44px from top -->
+    <div style="position:absolute;left:calc(270/920*100% - 72px);top:0px;
+                width:144px;background:#1C1A14;border:1px solid #3A3018;
+                border-radius:8px;padding:7px 10px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:20px;height:20px;border-radius:50%;background:#2E2615;flex-shrink:0;
+                    display:flex;align-items:center;justify-content:center;">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+            <circle cx="5" cy="3.5" r="2.5" fill="#C8A040"/>
+            <path d="M0 11 Q0 7 5 7 Q10 7 10 11" fill="#C8A040"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#F4F5F2;line-height:1.2;">Account Exec</div>
+          <div style="font-size:9px;font-family:var(--font-mono);color:#C8A040;letter-spacing:.03em;">Qualifies · Scopes PoC</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLIENT — left of left loop dot (112,170). Card: 130×52, right edge ≈ 88px -->
+    <div style="position:absolute;left:0;top:calc(170/340*100% - 26px);
+                width:120px;background:#141614;border:1px solid #252825;
+                border-radius:8px;padding:7px 10px;">
+      <div style="font-size:11px;font-weight:600;color:#8A9088;line-height:1.3;margin-bottom:2px;">Client</div>
+      <div style="font-size:9px;font-family:var(--font-mono);color:#5A5C58;letter-spacing:.03em;">Shipper / Broker</div>
+      <div style="font-size:8px;font-family:var(--font-mono);color:#3A3C38;letter-spacing:.02em;margin-top:2px;">Pain · Budget · Champion</div>
+    </div>
+
+    <!-- FDE — below left loop dot (270,278). Card top ≈ 296/340*100% -->
+    <div style="position:absolute;left:calc(270/920*100% - 72px);bottom:0px;
+                width:144px;background:#1C1A14;border:1px solid #3A3018;
+                border-radius:8px;padding:7px 10px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:20px;height:20px;border-radius:50%;background:#2E2615;flex-shrink:0;
+                    display:flex;align-items:center;justify-content:center;">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+            <circle cx="5" cy="3.5" r="2.5" fill="#C8A040"/>
+            <path d="M0 11 Q0 7 5 7 Q10 7 10 11" fill="#C8A040"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#F4F5F2;line-height:1.2;">FDE</div>
+          <div style="font-size:9px;font-family:var(--font-mono);color:#C8A040;letter-spacing:.03em;">Embeds · Trains · Validates</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CS — above right loop dot (650,62) -->
+    <div style="position:absolute;left:calc(650/920*100% - 72px);top:0px;
+                width:144px;background:#101E16;border:1px solid #163228;
+                border-radius:8px;padding:7px 10px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:20px;height:20px;border-radius:50%;background:#1A3025;flex-shrink:0;
+                    display:flex;align-items:center;justify-content:center;">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+            <circle cx="5" cy="3.5" r="2.5" fill="#4CAF72"/>
+            <path d="M0 11 Q0 7 5 7 Q10 7 10 11" fill="#4CAF72"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#F4F5F2;line-height:1.2;">Customer Success</div>
+          <div style="font-size:9px;font-family:var(--font-mono);color:#4CAF72;letter-spacing:.03em;">Adoption · QBRs · ROI</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRODUCT — right of right loop dot (808,170). Card left ≈ 836px -->
+    <div style="position:absolute;right:0;top:calc(170/340*100% - 26px);
+                width:120px;background:#101614;border:1px solid #163228;
+                border-radius:8px;padding:7px 10px;">
+      <div style="font-size:11px;font-weight:600;color:#8A9088;line-height:1.3;margin-bottom:2px;">Product &amp; Eng</div>
+      <div style="font-size:9px;font-family:var(--font-mono);color:#3A6A4A;letter-spacing:.03em;">Roadmap · Features</div>
+      <div style="font-size:8px;font-family:var(--font-mono);color:#2A4A38;letter-spacing:.02em;margin-top:2px;">CS feedback → builds</div>
+    </div>
+
+    <!-- LEADERSHIP — below right loop dot (650,278) -->
+    <div style="position:absolute;left:calc(650/920*100% - 72px);bottom:0px;
+                width:144px;background:#101614;border:1px solid #163228;
+                border-radius:8px;padding:7px 10px;">
+      <div style="display:flex;align-items:center;gap:7px;">
+        <div style="width:20px;height:20px;border-radius:50%;background:#1A3025;flex-shrink:0;
+                    display:flex;align-items:center;justify-content:center;">
+          <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+            <circle cx="5" cy="3.5" r="2.5" fill="#4CAF72" opacity=".8"/>
+            <path d="M0 11 Q0 7 5 7 Q10 7 10 11" fill="#4CAF72" opacity=".8"/>
+          </svg>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:#F4F5F2;line-height:1.2;">Leadership</div>
+          <div style="font-size:9px;font-family:var(--font-mono);color:#4CAF72;letter-spacing:.03em;">Velocity · Accountability</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end loop container -->
+
+  <!-- VELOCITY BREAK — outside loops, inline flow, not overlapping -->
+  <div style="display:flex;justify-content:center;margin:-6px 0 12px 0;">
+    <div style="display:inline-flex;align-items:center;gap:8px;background:#1A0A08;
+                border:1px solid rgba(192,80,64,0.7);border-radius:20px;
+                padding:6px 16px;">
+      <div style="width:6px;height:6px;border-radius:50%;background:#E07060;flex-shrink:0;"></div>
+      <div style="font-size:10px;font-weight:600;color:#E07060;letter-spacing:.03em;font-family:var(--font-mono);">Velocity breaks here</div>
+      <div style="width:1px;height:12px;background:rgba(192,80,64,0.3);"></div>
+      <div style="font-size:10px;color:#904040;font-family:var(--font-mono);letter-spacing:.02em;">FDE → CS handoff fails · Stage 2 plateau</div>
+    </div>
+  </div>
+
+  <!-- Three insight cards -->
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:20px;">
+
+    <div style="background:var(--aug-card);border:1px solid #3A3018;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;font-family:var(--font-mono);color:#C8A040;letter-spacing:.06em;margin-bottom:6px;">THE STALL PATTERN</div>
+      <div style="font-size:12px;color:var(--aug-white);font-weight:500;line-height:1.4;margin-bottom:5px;">FDE declares victory. CS inherits a cold account.</div>
+      <div style="font-size:11px;color:var(--aug-gray);line-height:1.6;">When CS doesn't know the account deeply at handoff, adoption stalls at Stage 2 and the expansion loop never starts. This is the root cause of zero accounts reaching 50% penetration.</div>
+    </div>
+
+    <div style="background:var(--aug-card);border:1px solid #163228;border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;font-family:var(--font-mono);color:#4CAF72;letter-spacing:.06em;margin-bottom:6px;">WHAT CLOSES THE LOOP</div>
+      <div style="font-size:12px;color:var(--aug-white);font-weight:500;line-height:1.4;margin-bottom:5px;">CS feedback reaches Product. Leadership makes it a priority.</div>
+      <div style="font-size:11px;color:var(--aug-gray);line-height:1.6;">CS hears what customers need to advance. Product builds it. Leadership holds the pace. When that cycle runs fast, accounts move from Stage 2 to Stage 4.</div>
+    </div>
+
+    <div style="background:var(--aug-card);border:1px solid var(--aug-border);border-radius:10px;padding:14px 16px;">
+      <div style="font-size:10px;font-family:var(--font-mono);color:var(--aug-gray2);letter-spacing:.06em;margin-bottom:6px;">THE CoS ROLE</div>
+      <div style="font-size:12px;color:var(--aug-white);font-weight:500;line-height:1.4;margin-bottom:5px;">Owns the crossover. Measures velocity through both loops.</div>
+      <div style="font-size:11px;color:var(--aug-gray);line-height:1.6;">The CoS sits above both loops — tracking handoff lag, accounts stuck at Stage 2, and where the loop is breaking. That is the weekly operating question that no one is currently asking.</div>
+    </div>
+
+  </div>
+
+
+  <!-- Role columnar flow -->
+  <div style="margin-top:4px;margin-bottom:20px;">
+    <div style="font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;
+                font-family:var(--font-mono);color:var(--aug-gray2);margin-bottom:10px;">
+      What each role does — in order
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 18px 1fr 18px 1fr 18px 1fr 18px 1fr 18px 1fr;gap:6px;align-items:start;">
+
+      <!-- AE -->
+      <div style="background:var(--aug-card);border:1px solid #3A3018;border-top:2px solid #C8A040;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#C8A040;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">AE</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Qualifies ICP fit and pain acuity before committing FDE resources
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Defines PoC success criteria in writing at contract signature
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Delivers implementation kickoff doc to CS before disengaging
+          </li>
+        </ul>
+      </div>
+
+      <!-- Arrow AE → CLIENT -->
+      <div style="display:flex;align-items:center;justify-content:center;
+                  color:#C8A040;font-size:16px;opacity:0.7;align-self:center;
+                  padding-bottom:20px;">›</div>
+
+      <!-- CLIENT -->
+      <div style="background:var(--aug-card);border:1px solid #252825;border-top:2px solid #555A52;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#8A9088;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">CLIENT</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#666A62;font-size:9px;top:2px;">›</span>
+            Names an internal champion with authority before go-live
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#666A62;font-size:9px;top:2px;">›</span>
+            Dedicates ops team time to FDE diagnostic and SOP review
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#666A62;font-size:9px;top:2px;">›</span>
+            Enforces zero-bypass discipline — escalate, never manually override
+          </li>
+        </ul>
+      </div>
+
+      <!-- Arrow CLIENT → FDE -->
+      <div style="display:flex;align-items:center;justify-content:center;
+                  color:#C8A040;font-size:16px;opacity:0.7;align-self:center;
+                  padding-bottom:20px;">›</div>
+
+      <!-- FDE -->
+      <div style="background:var(--aug-card);border:1px solid #3A3018;border-top:2px solid #C8A040;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#C8A040;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">FDE</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Embeds on-site, maps SOPs, configures Augie to actual workflows
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Trains every dispatcher by name — tracks completion, not attendance
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#C8A040;font-size:9px;top:2px;">›</span>
+            Feeds field intel back to Product — edge cases, integration gaps, unmet needs
+          </li>
+        </ul>
+      </div>
+
+      <!-- Arrow FDE → CS -->
+      <div style="display:flex;align-items:center;justify-content:center;
+                  color:#7AB890;font-size:16px;opacity:0.7;align-self:center;
+                  padding-bottom:20px;">›</div>
+
+      <!-- CS -->
+      <div style="background:var(--aug-card);border:1px solid #163228;border-top:2px solid #4CAF72;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#4CAF72;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">CS</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Runs structured QBRs — asks "can you say what changed in numbers?" every quarter
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Owns expansion scope — second workflow proposed at the 30-day ROI review
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Routes customer feedback to Product with commercial priority framing
+          </li>
+        </ul>
+      </div>
+
+      <!-- Arrow CS → PRODUCT -->
+      <div style="display:flex;align-items:center;justify-content:center;
+                  color:#4CAF72;font-size:16px;opacity:0.7;align-self:center;
+                  padding-bottom:20px;">›</div>
+
+      <!-- PRODUCT -->
+      <div style="background:var(--aug-card);border:1px solid #163228;border-top:2px solid #3A8A58;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#5AB87A;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">PRODUCT</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#5AB87A;font-size:9px;top:2px;">›</span>
+            Ingests FDE field intel and CS feedback into sprint prioritisation
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#5AB87A;font-size:9px;top:2px;">›</span>
+            Ships features that unlock the next maturity stage for stalled accounts
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#5AB87A;font-size:9px;top:2px;">›</span>
+            Publishes AE-ready release briefs so commercial teams can sell what just shipped
+          </li>
+        </ul>
+      </div>
+
+      <!-- Arrow PRODUCT → LEADERSHIP -->
+      <div style="display:flex;align-items:center;justify-content:center;
+                  color:#4CAF72;font-size:16px;opacity:0.7;align-self:center;
+                  padding-bottom:20px;">›</div>
+
+      <!-- LEADERSHIP -->
+      <div style="background:var(--aug-card);border:1px solid #163228;border-top:2px solid #4CAF72;
+                  border-radius:8px;padding:12px 10px;">
+        <div style="font-size:10px;font-weight:600;color:#4CAF72;letter-spacing:.04em;
+                    font-family:var(--font-mono);margin-bottom:8px;">LEADERSHIP</div>
+        <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Reviews account health weekly — flags any account stuck at Stage 2 for 60+ days
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Holds CS accountable for NDR above 110% — not just renewal, expansion
+          </li>
+          <li style="font-size:11px;color:var(--aug-gray);line-height:1.4;padding-left:10px;position:relative;">
+            <span style="position:absolute;left:0;color:#4CAF72;font-size:9px;top:2px;">›</span>
+            Prioritises product roadmap items that unlock the most stalled ARR
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+  <div class="slide-footer">
+    <div class="footer-logo">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none"><path d="M8 1L14 4.5V11.5L8 15L2 11.5V4.5L8 1Z" stroke="#4CAF72" stroke-width="1.2"/></svg>
+      augment
+    </div>
+    <div class="footer-label">CONFIDENTIAL · INTERNAL USE</div>
+  </div>
+
+</div>
+
+</body>
+</html>
